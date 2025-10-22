@@ -127,7 +127,7 @@ class QuotationsController extends BaseController
         }
 
         $customers = client::where('deleted_at', '=', null)->get();
-        
+
         //get warehouses assigned to user
         $user_auth = auth()->user();
         if($user_auth->is_all_warehouses){
@@ -408,7 +408,7 @@ class QuotationsController extends BaseController
                 $data['code'] = $detail['product']['code'];
                 $data['name'] = $detail['product']['name'];
             }
-            
+
             $data['quantity']  = $detail->quantity;
             $data['total']     = $detail->total;
             $data['price']     = $detail->price;
@@ -473,10 +473,11 @@ class QuotationsController extends BaseController
 
         $details = array();
         $helpers = new helpers();
-        $Quotation = Quotation::with('details.product.unitSale')
+        $Quotation = Quotation::with('details.product.unitSale','client')
             ->where('deleted_at', '=', null)
             ->findOrFail($id);
 
+        $quote['client_city'] = $Quotation['client']->city;
         $quote['client_name'] = $Quotation['client']->name;
         $quote['client_phone'] = $Quotation['client']->phone;
         $quote['client_adr'] = $Quotation['client']->adresse;
@@ -520,7 +521,7 @@ class QuotationsController extends BaseController
                 $data['code'] = $detail['product']['code'];
                 $data['name'] = $detail['product']['name'];
             }
-            
+
                 $data['detail_id'] = $detail_id += 1;
                 $data['quantity'] = number_format($detail->quantity, 2, '.', '');
                 $data['total'] = number_format($detail->total, 2, '.', '');
@@ -790,10 +791,10 @@ class QuotationsController extends BaseController
 
          //settings
          $settings = Setting::where('deleted_at', '=', null)->first();
-     
+
          //the custom msg of quotation
          $emailMessage  = EmailMessage::where('name', 'quotation')->first();
- 
+
          if($emailMessage){
              $message_body = $emailMessage->body;
              $message_subject = $emailMessage->subject;
@@ -801,20 +802,20 @@ class QuotationsController extends BaseController
              $message_body = '';
              $message_subject = '';
          }
- 
+
          //Tags
          $random_number = Str::random(10);
          $quotation_url = url('/api/quote_pdf/' . $request->id.'?'.$random_number);
          $quotation_number = $quotation->Ref;
- 
+
          $total_amount = $currency .' '.number_format($quotation->GrandTotal, 2, '.', ',');
-        
+
          $contact_name = $quotation['client']->name;
          $business_name = $settings->CompanyName;
- 
+
          //receiver email
          $receiver_email = $quotation['client']->email;
- 
+
          //replace the text with tags
          $message_body = str_replace('{contact_name}', $contact_name, $message_body);
          $message_body = str_replace('{business_name}', $business_name, $message_body);
@@ -826,7 +827,7 @@ class QuotationsController extends BaseController
         $email['body'] = $message_body;
         $email['company_name'] = $business_name;
 
-        $this->Set_config_mail(); 
+        $this->Set_config_mail();
 
         $mail = Mail::to($receiver_email)->send(new CustomEmail($email));
 
@@ -866,7 +867,7 @@ class QuotationsController extends BaseController
         $quotation_number = $quotation->Ref;
 
         $total_amount = $currency .' '.number_format($quotation->GrandTotal, 2, '.', ',');
-        
+
         $contact_name = $quotation['client']->name;
         $business_name = $settings->CompanyName;
 
@@ -890,7 +891,7 @@ class QuotationsController extends BaseController
 
                 $client = new Client_Twilio($account_sid, $auth_token);
                 $client->messages->create($receiverNumber, [
-                    'from' => $twilio_number, 
+                    'from' => $twilio_number,
                     'body' => $message_text]);
 
             } catch (Exception $e) {
@@ -909,7 +910,7 @@ class QuotationsController extends BaseController
                         'from' => $nexmo_from,
                         'text' => $message_text
                     ]);
-                            
+
                 } catch (Exception $e) {
                     return response()->json(['message' => $e->getMessage()], 500);
                 }
@@ -925,31 +926,31 @@ class QuotationsController extends BaseController
                     ->setHost($BASE_URL)
                     ->setApiKeyPrefix('Authorization', 'App')
                     ->setApiKey('Authorization', $API_KEY);
-                
+
                 $client = new Client_guzzle();
-                
+
                 $sendSmsApi = new SendSMSApi($client, $configuration);
                 $destination = (new SmsDestination())->setTo($receiverNumber);
                 $message = (new SmsTextualMessage())
                     ->setFrom($SENDER)
                     ->setText($message_text)
                     ->setDestinations([$destination]);
-                    
+
                 $request = (new SmsAdvancedTextualRequest())->setMessages([$message]);
-                
+
                 try {
                     $smsResponse = $sendSmsApi->sendSmsMessage($request);
                     echo ("Response body: " . $smsResponse);
                 } catch (Throwable $apiException) {
                     echo("HTTP Code: " . $apiException->getCode() . "\n");
                 }
-                
+
         }
 
         return response()->json(['success' => true]);
     }
 
-    
+
 
 }
 

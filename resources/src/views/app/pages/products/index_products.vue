@@ -224,7 +224,7 @@
               <table class="table table-bordered table-sm mt-4">
                 <tbody>
                   <tr>
-                    <td>{{$t('Name_product')}}</td>
+                    <td>Dessin</td>
                     <th>
                       <span class="badge badge-outline-success">{{$t('Field_is_required')}}</span>
                     </th>
@@ -239,9 +239,16 @@
                   </tr>
 
                   <tr>
-                    <td>{{$t('Categorie')}}</td>
+                    <td>{{$t('Namecolor')}}</td>
                     <th>
                       <span class="badge badge-outline-success">{{$t('Field_is_required')}}</span>
+                    </th>
+                  </tr>
+
+                  <tr>
+                    <td>{{$t('Brand')}}</td>
+                    <th>
+                      <span class="badge badge-outline-info">{{$t('Field_is_required')}}</span>
                     </th>
                   </tr>
 
@@ -263,14 +270,7 @@
                     <td>{{$t('UnitProduct')}}</td>
                     <th>
                       <span class="badge badge-outline-success">{{$t('Field_is_required')}}</span>
-                      {{$t('must_be_exist')}} {{$t('Please_use_short_name_of_unit')}}
-                    </th>
-                  </tr>
-
-                  <tr>
-                    <td>{{$t('Brand')}}</td>
-                    <th>
-                      <span class="badge badge-outline-info">{{$t('Field_optional')}}</span>
+                       {{$t('Please_use_short_name_of_unit')}}
                     </th>
                   </tr>
 
@@ -433,7 +433,7 @@ export default {
           { title: "type", dataKey: "type" },
           { title: "name", dataKey: "name" },
           { title: "code", dataKey: "code" },
-          { title: "category", dataKey: "category" },
+          { title: "couleur", dataKey: "category" },
           { title: "cost", dataKey: "cost" },
           { title: "price", dataKey: "price" },
           { title: "unit", dataKey: "unit" },

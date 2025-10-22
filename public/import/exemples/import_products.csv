@@ -1,4 +1,2 @@
-name;code;category;brand;cost;price;unit;stock_alert;note
-Product 1;23454378;Perfume;gucci;15;20;pc;0;details product 1
-Product 2;11111111;Sport;Nike;30;45;pc;10;details product 2
-Product 3;88888888;Sport;Nike;5;7;pc;50;details product 3
+Dessin;Code_Produit;Couleur;Prix_Achat;Prix_Vente;Unite;Marque;Stock_Alert;Remarque
+BANA101 A ROSE; ;Rose;20;30;m;Rawnatex;10;Commentaire

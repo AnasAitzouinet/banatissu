@@ -211,7 +211,7 @@ export default {
     View_all: 'View all',
     Payment_Sent_Received: 'Payment Sent & Received',
     Filter: 'Filter',
-    Invoice_POS: 'Invoice POS',
+    Invoice_POS: 'Bon de Commande',
     Invoice: 'Invoice',
     Customer_Info: 'Customer Info',
     Company_Info: 'Company Info',

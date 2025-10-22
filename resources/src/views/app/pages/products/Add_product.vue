@@ -30,13 +30,13 @@
                 </b-col>
 
                 <!-- Barcode Symbology  -->
-                <b-col md="6" class="mb-2">
+                <b-col md="6" class="mb-2" style="display: none;">
                   <validation-provider name="Barcode Symbology" :rules="{ required: true}">
                     <b-form-group
                       slot-scope="{ valid, errors }"
                       :label="$t('BarcodeSymbology') + ' ' + '*'"
                     >
-                      <v-select
+                      <v-select 
                         :class="{'is-invalid': !!errors.length}"
                         :state="errors[0] ? false : (valid ? true : null)"
                         v-model="product.Type_barcode"
@@ -44,11 +44,7 @@
                         :placeholder="$t('Choose_Symbology')"
                         :options="
                             [
-                              {label: 'Code 128', value: 'CODE128'},
-                              {label: 'Code 39', value: 'CODE39'},
-                              {label: 'EAN8', value: 'EAN8'},
-                              {label: 'EAN13', value: 'EAN13'},
-                              {label: 'UPC', value: 'UPC'},
+                              {label: 'Code 128', value: 'CODE128'}
                             ]"
                       ></v-select>
                       <b-form-invalid-feedback>{{ errors[0] }}</b-form-invalid-feedback>
@@ -124,7 +120,7 @@
                 </b-col>
 
                 <!-- Order Tax -->
-                <b-col md="6" class="mb-2">
+                <b-col md="6" class="mb-2" style="display: none;">
                   <validation-provider
                     name="Order Tax"
                     :rules="{regex: /^\d*\.?\d*$/}"
@@ -190,7 +186,7 @@
             <b-card class="mt-3">
               <b-row>
                 <!-- Type  -->
-                <b-col md="6" class="mb-2">
+                <b-col md="6" class="mb-2" style="display: none;">
                   <validation-provider name="Type" :rules="{ required: true}">
                     <b-form-group slot-scope="{ valid, errors }" :label="$t('type') + ' ' + '*'">
                       <v-select
@@ -202,8 +198,6 @@
                         :options="
                             [
                             {label: 'Standard Product', value: 'is_single'},
-                            {label: 'Variable Product', value: 'is_variant'},
-                            {label: 'Service Product', value: 'is_service'}
                             ]"
                       ></v-select>
                       <b-form-invalid-feedback>{{ errors[0] }}</b-form-invalid-feedback>
@@ -284,7 +278,7 @@
                 </b-col>
 
                 <!-- Unit Sale -->
-                <b-col md="6" class="mb-2" v-if="product.type != 'is_service'">
+                <b-col md="6" style="display: none;" class="mb-2" v-if="product.type != 'is_service'">
                   <validation-provider name="Unit Sale" :rules="{ required: true}">
                     <b-form-group
                       slot-scope="{ valid, errors }"
@@ -304,7 +298,7 @@
                 </b-col>
 
                 <!-- Unit Purchase -->
-                <b-col md="6" class="mb-2" v-if="product.type != 'is_service'">
+                <b-col md="6" class="mb-2" style="display: none;" v-if="product.type != 'is_service'">
                   <validation-provider name="Unit Purchase" :rules="{ required: true}">
                     <b-form-group
                       slot-scope="{ valid, errors }"
@@ -674,13 +668,18 @@ export default {
     },
 
     //---------------------- Event Select Unit Product ------------------------------\\
-    Selected_Unit(value) {
-      this.units_sub = [];
-      this.product.unit_sale_id = "";
-      this.product.unit_purchase_id = "";
-      this.Get_Units_SubBase(value);
-    },
+   Selected_Unit(value) {
+  this.units_sub = [];
+  this.product.unit_sale_id = "";
+  this.product.unit_purchase_id = "";
 
+  // Load sub units from API
+  this.Get_Units_SubBase(value);
+
+  // Set default selected value to the same as unit_id
+  this.product.unit_sale_id = value;
+  this.product.unit_purchase_id = value;
+},
     //------------------------------ Create new Product ------------------------------\\
     Create_Product() {
       // Start the progress bar.

@@ -225,9 +225,9 @@ class ProvidersController extends BaseController
             $rowcount = 0;
             if (($handle = fopen($file_upload, "r")) !== false) {
                 $max_line_length = defined('MAX_LINE_LENGTH') ? MAX_LINE_LENGTH : 10000;
-                $header = fgetcsv($handle, $max_line_length);
+                $header = fgetcsv($handle, $max_line_length, ';'); // Use semicolon as the delimiter
                 $header_colcount = count($header);
-                while (($row = fgetcsv($handle, $max_line_length)) !== false) {
+                while (($row = fgetcsv($handle, $max_line_length, ';')) !== false) { // Use semicolon as the delimiter
                     $row_colcount = count($row);
                     if ($row_colcount == $header_colcount) {
                         $entry = array_combine($header, $row);
@@ -242,25 +242,24 @@ class ProvidersController extends BaseController
                 return null;
             }
 
-            $rules = array('name' => 'required');
+            $rules = [];
 
             //-- Create New Provider
             foreach ($data as $key => $value) {
-
-                $input['name'] = $value['name'];
-
-                $validator = Validator::make($input, $rules);
+                
+                $validator = Validator::make($value, $rules);
                 if (!$validator->fails()) {
-
+                    $value = $this->cleanArrayKeys($value);
+                    
                     Provider::create([
                         'name' => $value['name'],
                         'code' => $this->getNumberOrder(),
-                        'adresse' => $value['adresse'] == '' ? null : $value['adresse'],
                         'phone' => $value['phone'] == '' ? null : $value['phone'],
                         'email' => $value['email'] == '' ? null : $value['email'],
-                        'country' => $value['country'] == '' ? null : $value['country'],
-                        'city' => $value['city'] == '' ? null : $value['city'],
-                        'tax_number' => $value['tax_number'] == '' ? null : $value['tax_number'],
+                        'pays' => $value['pays'] == '' ? null : $value['pays'],
+                        'ville' => $value['ville'] == '' ? null : $value['ville'],
+                        'adresse' => $value['adresse'] == '' ? null : $value['adresse'],
+                        'ICE' => $value['ICE'] == '' ? null : $value['ICE'],
                     ]);
                 }
                 
@@ -398,5 +397,24 @@ class ProvidersController extends BaseController
         return response()->json(['success' => true]);
 
     }
+    
+    public function cleanArrayKeys(array $arr): array {
+    $clean = [];
+    foreach ($arr as $key => $value) {
+        // Remove invisible/unprintable characters
+        $newKey = preg_replace('/[[:^print:]]/', '', $key);
+        // Trim normal spaces/tabs/newlines
+        $newKey = trim($newKey);
+
+        // If value is also an array, clean recursively
+        if (is_array($value)) {
+            $value = 
+            $this->cleanArrayKeys($value);
+        }
+
+        $clean[$newKey] = $value;
+    }
+    return $clean;
+}
 
 }

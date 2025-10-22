@@ -1105,7 +1105,7 @@ export default {
           var dark_heading = "#c2c6dc";
 
           this.Stock_Count = {
-            color: ["#6D28D9", "#A78BFA", "#7C3AED", "#AF8C3E", "#C4B5FD"],
+            color: ["#ebd288ff", "#fdad00ff", "#e7c609ff", "#AF8C3E", "#e7a109ff"],
             tooltip: {
               show: true,
               backgroundColor: "rgba(0, 0, 0, .8)",
@@ -1139,7 +1139,7 @@ export default {
             ]
           };
           this.Stock_value = {
-            color: ["#6D28D9", "#A78BFA", "#7C3AED", "#AF8C3E", "#C4B5FD"],
+            color: ["#ebd288ff", "#fdad00ff", "#e7c609ff", "#AF8C3E", "#e7a109ff"],
             tooltip: {
               show: true,
               backgroundColor: "rgba(0, 0, 0, .8)",

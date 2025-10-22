@@ -8,13 +8,13 @@
     <link rel=icon href=/images/favicon.ico>
     <link rel="stylesheet" href="/css/master.css">
 
-    <title>Stocky | Ultimate Inventory With POS</title>
+    <title>Banatiss - Gestion de Stock</title>
   </head>
 
   <body class="text-left">
     <noscript>
       <strong>
-        We're sorry but Stocky doesn't work properly without JavaScript
+        We're sorry but Banatiss doesn't work properly without JavaScript
         enabled. Please enable it to continue.</strong
       >
     </noscript>

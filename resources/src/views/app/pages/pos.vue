@@ -775,7 +775,7 @@
         </b-sidebar>
 
         <!-- Modal Show Invoice POS-->
-        <b-modal hide-footer size="sm" scrollable id="Show_invoice" :title="$t('Invoice_POS')">
+        <b-modal hide-footer size="sm" scrollable id="Show_invoice" title="Bon de Commande">
           <div id="invoice-POS">
             <div style="max-width:400px;margin:0px auto">
               <div class="info">

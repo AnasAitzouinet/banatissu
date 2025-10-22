@@ -30,7 +30,7 @@
                 </b-col>
 
                 <!-- Barcode Symbology  -->
-                <b-col md="6" class="mb-2">
+                <b-col md="6" class="mb-2" style="display: none;">
                   <validation-provider name="Barcode Symbology" :rules="{ required: true}">
                     <b-form-group
                       slot-scope="{ valid, errors }"
@@ -45,10 +45,6 @@
                         :options="
                             [
                               {label: 'Code 128', value: 'CODE128'},
-                              {label: 'Code 39', value: 'CODE39'},
-                              {label: 'EAN8', value: 'EAN8'},
-                              {label: 'EAN13', value: 'EAN13'},
-                              {label: 'UPC', value: 'UPC'},
                             ]"
                       ></v-select>
                       <b-form-invalid-feedback>{{ errors[0] }}</b-form-invalid-feedback>
@@ -124,7 +120,7 @@
                 </b-col>
 
                 <!-- Order Tax -->
-                <b-col md="6" class="mb-2">
+                <b-col md="6" class="mb-2" style="display: none;">
                   <validation-provider
                     name="Order Tax"
                     :rules="{regex: /^\d*\.?\d*$/}"
@@ -151,7 +147,7 @@
                 </b-col>
 
                 <!-- Tax Method -->
-                <b-col lg="6" md="6" sm="12" class="mb-2">
+                <b-col lg="6" md="6" sm="12" class="mb-2" style="display: none;">
                   <validation-provider name="Tax Method" :rules="{ required: true}">
                     <b-form-group
                       slot-scope="{ valid, errors }"
@@ -192,7 +188,7 @@
               
                  <!-- type -->
 
-                <b-col md="6" class="mb-2" v-if="product.type == 'is_single'">
+                <b-col md="6" class="mb-2" style="display: none;" v-if="product.type == 'is_single'">
                   <b-form-group :label="$t('type')">
                     <b-form-input
                       label="Product Type"
@@ -202,7 +198,7 @@
                   </b-form-group>
                 </b-col>
 
-               <b-col md="6" class="mb-2" v-else-if="product.type == 'is_service'">
+               <b-col style="display: none;" md="6" class="mb-2" v-else-if="product.type == 'is_service'">
                   <b-form-group :label="$t('type')">
                     <b-form-input
                       label="Product Type"
@@ -212,7 +208,7 @@
                   </b-form-group>
                 </b-col>
 
-                <b-col md="6" class="mb-2" v-else-if="product.type == 'is_variant'">
+                <b-col style="display: none;" md="6" class="mb-2" v-else-if="product.type == 'is_variant'">
                   <b-form-group :label="$t('type')">
                     <b-form-input
                       label="Product Type"
@@ -223,7 +219,7 @@
                 </b-col>
 
                 <!-- Product Cost -->
-                <b-col md="6" class="mb-2" v-if="product.type == 'is_single'">
+                <b-col md="6" class="mb-2"  v-if="product.type == 'is_single'">
                   <validation-provider
                     name="Product Cost"
                     :rules="{ required: true , regex: /^\d*\.?\d*$/}"
@@ -295,7 +291,7 @@
                 </b-col>
 
                 <!-- Unit Sale -->
-                <b-col md="6" class="mb-2" v-if="product.type != 'is_service'">
+                <b-col md="6" style="display: none;" class="mb-2" v-if="product.type != 'is_service'">
                   <validation-provider name="Unit Sale" :rules="{ required: true}">
                     <b-form-group
                       slot-scope="{ valid, errors }"
@@ -315,7 +311,7 @@
                 </b-col>
 
                 <!-- Unit Purchase -->
-                <b-col md="6" class="mb-2" v-if="product.type != 'is_service'">
+                <b-col md="6" style="display: none;" class="mb-2" v-if="product.type != 'is_service'">
                   <validation-provider name="Unit Purchase" :rules="{ required: true}">
                     <b-form-group
                       slot-scope="{ valid, errors }"

@@ -21,7 +21,7 @@
   }
 
   .loading {
-    border: 3px solid rgba(102, 51, 153, 0.45);
+    border: 3px solid rgba(231, 192, 19, 0.45);
     position: absolute;
     left: calc(50% - 40px);
     top: 50%;

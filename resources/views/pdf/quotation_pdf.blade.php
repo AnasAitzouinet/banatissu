@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
    <head>
       <meta charset="utf-8">
-      <title>Quotation _{{$quote['Ref']}}</title>
+      <title>Devis _{{$quote['Ref']}}</title>
       <link rel="stylesheet" href="{{asset('/css/pdf_style.css')}}" media="all" />
    </head>
 
@@ -12,12 +12,12 @@
          <img src="{{asset('/images/'.$setting['logo'])}}">
          </div>
          <div id="company">
-            <div><strong> Date: </strong>{{$quote['date']}}</div>
-            <div><strong> Number: </strong> {{$quote['Ref']}}</div>
-            <div><strong> Status: </strong> {{$quote['statut']}}</div>
+            <div><strong> Date : </strong>{{$quote['date']}}</div>
+            <div><strong> Numéro : </strong> {{$quote['Ref']}}</div>
+            <div><strong> Statut : </strong> {{$quote['statut']}}</div>
          </div>
          <div id="Title-heading">
-            Quotation  : {{$quote['Ref']}}
+            Devis : {{$quote['Ref']}}
          </div>
          </div>
       </header>
@@ -27,36 +27,37 @@
                <table class="table-sm">
                   <thead>
                      <tr>
-                        <th class="desc">Customer Info</th>
+                        <th class="desc">Informations Client</th>
                      </tr>
                   </thead>
                   <tbody>
                      <tr>
                         <td>
-                           <div><strong>Full Name :</strong> {{$quote['client_name']}}</div>
-                           <div><strong>Phone :</strong> {{$quote['client_phone']}}</div>
-                           <div><strong>Email :</strong>  {{$quote['client_email']}}</div>
-                           <div><strong>Address :</strong>   {{$quote['client_adr']}}</div>
-                           @if($quote['client_tax'])<div><strong>Tax Number :</strong>  {{$quote['client_tax']}}</div>@endif
+                           <div><strong>Nom Complet :</strong> {{$quote['client_name']}}</div>
+                           <div><strong>Téléphone :</strong> {{$quote['client_phone']}}</div>
+{{--                           <div><strong>Email :</strong>  {{$quote['client_email']}}</div>--}}
+{{--                           <div><strong>Adresse :</strong>   {{$quote['client_adr']}}</div> --}}
+                            <div><strong>Ville :</strong> {{$quote['client_city'] ?? null}}</div>
+                           @if($quote['client_tax'])<div><strong>Numéro Fiscal :</strong>  {{$quote['client_tax']}}</div>@endif
                         </td>
                      </tr>
                   </tbody>
                </table>
             </div>
             <div id="invoice">
-               <table  class="table-sm">
+               <table class="table-sm">
                   <thead>
                      <tr>
-                        <th class="desc">Company Info</th>
+                        <th class="desc">Informations Société</th>
                      </tr>
                   </thead>
                   <tbody>
                      <tr>
                         <td>
                            <div id="comp">{{$setting['CompanyName']}}</div>
-                           <div><strong>Phone :</strong>  {{$setting['CompanyPhone']}}</div>
-                           <div><strong>Email :</strong>  {{$setting['email']}}</div>
-                           <div><strong>Address :</strong>  {{$setting['CompanyAdress']}}</div>
+                           <div><strong>Téléphone :</strong>  {{$setting['CompanyPhone']}}</div>
+{{--                           <div><strong>Email :</strong>  {{$setting['email']}}</div>--}}
+                           <div><strong>Adresse :</strong>  {{$setting['CompanyAdress']}}</div>
                         </td>
                      </tr>
                   </tbody>
@@ -67,11 +68,11 @@
             <table class="table-sm">
                <thead>
                   <tr>
-                     <th>PRODUCT</th>
-                     <th>UNIT PRICE</th>
-                     <th>QUANTITY</th>
-                     <th>DISCOUNT</th>
-                     <th>TAX</th>
+                     <th>PRODUIT</th>
+                     <th>PRIX UNITAIRE</th>
+                     <th>QUANTITÉ</th>
+                     <th>REMISSE</th>
+                     <th>TAXE</th>
                      <th>TOTAL</th>
                   </tr>
                </thead>
@@ -97,15 +98,15 @@
          <div id="total">
             <table>
                <tr>
-                  <td>Order Tax</td>
+                  <td>Taxe sur la commande</td>
                   <td>{{$quote['TaxNet']}} </td>
                </tr>
                <tr>
-                  <td>Discount</td>
+                  <td>Remise</td>
                   <td>{{$quote['discount']}} </td>
                </tr>
                <tr>
-                  <td>Shipping</td>
+                  <td>Expédition</td>
                   <td>{{$quote['shipping']}} </td>
                </tr>
                <tr>

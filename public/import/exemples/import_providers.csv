@@ -1,3 +1,2 @@
-name;email;country;city;phone;adresse;tax_number
-provider 1;provider1@example.com;Usa;New york;1234567;New york city;123456
-provider 2;provider2@example.com;France;Paris;1234567;Paris city;2357557
+name;phone;email;pays;ville;adresse;ICE
+Hamid Fassi;0659696969;hamidfassi@gmail.com;Maroc;Fes;Fes Batha;25464354846
