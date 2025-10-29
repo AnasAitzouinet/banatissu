@@ -96,6 +96,7 @@
                           <th scope="col">{{$t('Net_Unit_Cost')}}</th>
                           <th scope="col">{{$t('Current_stock')}}</th>
                           <th scope="col">{{$t('Qty')}}</th>
+                          <th scope="col">{{$t('pieces_count_optional')}}</th>
                           <th scope="col">{{$t('Discount')}}</th>
                           <th scope="col">{{$t('Tax')}}</th>
                           <th scope="col">{{$t('SubTotal')}}</th>
@@ -106,7 +107,7 @@
                       </thead>
                       <tbody>
                         <tr v-if="details.length <=0">
-                          <td colspan="9">{{$t('NodataAvailable')}}</td>
+                          <td colspan="10">{{$t('NodataAvailable')}}</td>
                         </tr>
                         <tr v-for="detail in details">
                           <td>{{detail.detail_id}}</td>
@@ -146,6 +147,15 @@
                                 </b-input-group-append>
                               </b-input-group>
                             </div>
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              class="form-control"
+                              :placeholder="$t('pieces_count_optional')"
+                              v-model.number="detail.pieces_count"
+                              min="0"
+                            >
                           </td>
                           <td>{{currentUser.currency}} {{formatNumber(detail.DiscountNet * detail.quantity, 2)}}</td>
                           <td>{{currentUser.currency}} {{formatNumber(detail.taxe * detail.quantity, 2)}}</td>
@@ -276,7 +286,7 @@
                         :placeholder="$t('Choose_Status')"
                         :options="
                             [
-                              {label: 'received', value: 'received'},
+                              {label: 'received', value: 'Reçu'},
                               {label: 'pending', value: 'pending'},
                                {label: 'ordered', value: 'ordered'}
                             ]"

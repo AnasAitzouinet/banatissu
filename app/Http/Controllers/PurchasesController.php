@@ -234,6 +234,12 @@ class PurchasesController extends BaseController
                             } else {
                                 $product_warehouse->qte += $value['quantity'] * $unit->operator_value;
                             }
+                            
+                            // Update pieces count if provided
+                            if (isset($value['pieces_count']) && $value['pieces_count']) {
+                                $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) + $value['pieces_count'];
+                            }
+                            
                             $product_warehouse->save();
                         }
 
@@ -249,6 +255,12 @@ class PurchasesController extends BaseController
                             } else {
                                 $product_warehouse->qte += $value['quantity'] * $unit->operator_value;
                             }
+                            
+                            // Update pieces count if provided
+                            if (isset($value['pieces_count']) && $value['pieces_count']) {
+                                $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) + $value['pieces_count'];
+                            }
+                            
                             $product_warehouse->save();
                         }
                     }
@@ -379,6 +391,11 @@ class PurchasesController extends BaseController
                                     } else {
                                         $product_warehouse->qte += $prod_detail['quantity'] * $unit_prod->operator_value;
                                     }
+                                    
+                                    // Update pieces count if provided
+                                    if (isset($prod_detail['pieces_count']) && $prod_detail['pieces_count']) {
+                                        $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) + $prod_detail['pieces_count'];
+                                    }
 
                                     $product_warehouse->save();
                                 }
@@ -394,6 +411,11 @@ class PurchasesController extends BaseController
                                         $product_warehouse->qte += $prod_detail['quantity'] / $unit_prod->operator_value;
                                     } else {
                                         $product_warehouse->qte += $prod_detail['quantity'] * $unit_prod->operator_value;
+                                    }
+                                    
+                                    // Update pieces count if provided
+                                    if (isset($prod_detail['pieces_count']) && $prod_detail['pieces_count']) {
+                                        $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) + $prod_detail['pieces_count'];
                                     }
 
                                     $product_warehouse->save();
@@ -817,17 +839,27 @@ class PurchasesController extends BaseController
 
     public function Purchase_pdf(Request $request, $id)
     {
+        // Increase execution time and memory for PDF generation
+        ini_set('max_execution_time', 300);
+        ini_set('memory_limit', '512M');
+
         $details = array();
         $helpers = new helpers();
-        $Purchase_data = Purchase::with('details.product.unitPurchase')
+        $Purchase_data = Purchase::with([
+                'details.product.unitPurchase',
+                'provider',
+                'warehouse'
+            ])
             ->where('deleted_at', '=', null)
             ->findOrFail($id);
 
-        $purchase['supplier_name'] = $Purchase_data['provider']->name;
-        $purchase['supplier_phone'] = $Purchase_data['provider']->phone;
-        $purchase['supplier_adr'] = $Purchase_data['provider']->adresse;
-        $purchase['supplier_email'] = $Purchase_data['provider']->email;
-        $purchase['supplier_tax'] = $Purchase_data['provider']->tax_number;
+        // Safely get supplier data
+        $provider = $Purchase_data->provider;
+        $purchase['supplier_name'] = $provider ? $provider->name : 'N/A';
+        $purchase['supplier_phone'] = $provider ? $provider->phone : '';
+        $purchase['supplier_adr'] = $provider ? $provider->adresse : '';
+        $purchase['supplier_email'] = $provider ? $provider->email : '';
+        $purchase['supplier_tax'] = $provider ? $provider->tax_number : '';
         $purchase['TaxNet'] = number_format($Purchase_data->TaxNet, 2, '.', '');
         $purchase['discount'] = number_format($Purchase_data->discount, 2, '.', '');
         $purchase['shipping'] = number_format($Purchase_data->shipping, 2, '.', '');
@@ -905,16 +937,37 @@ class PurchasesController extends BaseController
             'details' => $details,
         ])->render();
 
-        $arabic = new Arabic();
-        $p = $arabic->arIdentify($Html);
+        // Arabic text processing - optimized with safety checks
+        try {
+            if (strlen($Html) < 500000) {
+                $arabic = new Arabic();
+                $p = $arabic->arIdentify($Html);
 
-        for ($i = count($p)-1; $i >= 0; $i-=2) {
-            $utf8ar = $arabic->utf8Glyphs(substr($Html, $p[$i-1], $p[$i] - $p[$i-1]));
-            $Html = substr_replace($Html, $utf8ar, $p[$i-1], $p[$i] - $p[$i-1]);
+                if (!empty($p) && count($p) >= 2 && is_array($p)) {
+                    $count = count($p);
+                    for ($i = $count - 1; $i >= 1; $i -= 2) {
+                        $start = $p[$i-1];
+                        $end = $p[$i];
+                        
+                        if (is_numeric($start) && is_numeric($end) && $end > $start && $start >= 0) {
+                            $length = $end - $start;
+                            if ($length < 50000) {
+                                $text = substr($Html, $start, $length);
+                                $utf8ar = $arabic->utf8Glyphs($text);
+                                $Html = substr_replace($Html, $utf8ar, $start, $length);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Arabic text processing failed for Purchase PDF: ' . $e->getMessage());
         }
 
         $pdf = PDF::loadHTML($Html);
-        return $pdf->download('purchase.pdf');
+        $pdf->setPaper('A4', 'portrait');
+        
+        return $pdf->download('purchase_' . $purchase['Ref'] . '.pdf');
 
     }
 

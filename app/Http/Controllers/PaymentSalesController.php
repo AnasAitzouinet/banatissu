@@ -499,12 +499,31 @@ class PaymentSalesController extends BaseController
             'payment' => $payment_data,
         ])->render();
 
-        $arabic = new Arabic();
-        $p = $arabic->arIdentify($Html);
+        // Arabic text processing with safety checks
+        try {
+            if (strlen($Html) < 500000) {
+                $arabic = new Arabic();
+                $p = $arabic->arIdentify($Html);
 
-        for ($i = count($p)-1; $i >= 0; $i-=2) {
-            $utf8ar = $arabic->utf8Glyphs(substr($Html, $p[$i-1], $p[$i] - $p[$i-1]));
-            $Html = substr_replace($Html, $utf8ar, $p[$i-1], $p[$i] - $p[$i-1]);
+                if (!empty($p) && count($p) >= 2 && is_array($p)) {
+                    $count = count($p);
+                    for ($i = $count - 1; $i >= 1; $i -= 2) {
+                        $start = $p[$i-1];
+                        $end = $p[$i];
+                        
+                        if (is_numeric($start) && is_numeric($end) && $end > $start && $start >= 0) {
+                            $length = $end - $start;
+                            if ($length < 50000) {
+                                $text = substr($Html, $start, $length);
+                                $utf8ar = $arabic->utf8Glyphs($text);
+                                $Html = substr_replace($Html, $utf8ar, $start, $length);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Arabic text processing failed for Payment Sale PDF: ' . $e->getMessage());
         }
 
         $pdf = PDF::loadHTML($Html);

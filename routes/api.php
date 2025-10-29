@@ -245,6 +245,7 @@ Route::middleware(['auth:api', 'Is_Active'])->group(function () {
     Route::get('barcode_create_page', 'ProductsController@Get_element_barcode');
     Route::post('products/delete/by_selection', 'ProductsController@delete_by_selection');
     Route::get('show_product_data/{id}/{variant_id}', 'ProductsController@show_product_data');
+    Route::get('show_product_data/{id}/{variant_id}/{warehouse_id}', 'ProductsController@show_product_data');
 
 
      //---- count stock ----------

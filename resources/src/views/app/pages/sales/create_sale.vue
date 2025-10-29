@@ -99,6 +99,7 @@
                           <th scope="col">{{$t('Net_Unit_Price')}}</th>
                           <th scope="col">{{$t('CurrentStock')}}</th>
                           <th scope="col">{{$t('Qty')}}</th>
+                          <th scope="col">{{$t('pieces_count_optional')}}</th>
                           <th scope="col">{{$t('Discount')}}</th>
                           <th scope="col">{{$t('Tax')}}</th>
                           <th scope="col">{{$t('SubTotal')}}</th>
@@ -109,7 +110,7 @@
                       </thead>
                       <tbody>
                         <tr v-if="details.length <=0">
-                          <td colspan="9">{{$t('NodataAvailable')}}</td>
+                          <td colspan="10">{{$t('NodataAvailable')}}</td>
                         </tr>
                         <tr v-for="detail  in details" >
                           <td >{{detail.detail_id}}</td>
@@ -123,6 +124,10 @@
                           <td>
                             <span class="badge badge-warning" v-if="detail.product_type == 'is_service'">----</span>
                             <span class="badge badge-warning" v-else>{{detail.stock}} {{detail.unitSale}}</span>
+                            <br v-if="detail.available_pieces > 0">
+                            <small class="text-muted" v-if="detail.available_pieces > 0">
+                              {{detail.available_pieces}} {{$t('Pieces')}}
+                            </small>
                           </td>
                           <td>
                             <div class="quantity">
@@ -147,6 +152,35 @@
                                   >+</span>
                                 </b-input-group-append>
                               </b-input-group>
+                            </div>
+                          </td>
+                          <td>
+                            <div class="quantity">
+                              <b-input-group>
+                                <b-input-group-prepend>
+                                  <span
+                                    class="btn btn-warning btn-sm"
+                                    @click="decrementPieces(detail)"
+                                  >-</span>
+                                </b-input-group-prepend>
+                                <input
+                                  type="number"
+                                  class="form-control"
+                                  :placeholder="$t('Pieces')"
+                                  v-model.number="detail.pieces_count"
+                                  min="0"
+                                  :max="detail.available_pieces || 999999"
+                                >
+                                <b-input-group-append>
+                                  <span
+                                    class="btn btn-warning btn-sm"
+                                    @click="incrementPieces(detail)"
+                                  >+</span>
+                                </b-input-group-append>
+                              </b-input-group>
+                              <small class="text-muted" v-if="detail.available_pieces">
+                                {{$t('Available')}}: {{detail.available_pieces}}
+                              </small>
                             </div>
                           </td>
                           <td>{{currentUser.currency}} {{formatNumber(detail.DiscountNet * detail.quantity, 2)}}</td>
@@ -1180,7 +1214,7 @@ export default {
             }
           }
         this.product.product_variant_id = result.product_variant_id;
-        this.Get_Product_Details(result.id, result.product_variant_id);
+        this.Get_Product_Details(result.id, result.product_variant_id, this.sale.warehouse_id);
       }
 
       this.search_input= '';
@@ -1282,6 +1316,32 @@ export default {
       }
       this.$forceUpdate();
       this.Calcul_Total();
+    },
+
+    //-----------------------------------increment Pieces Count ------------------------------\\
+
+    incrementPieces(detail) {
+      if (!detail.pieces_count) {
+        detail.pieces_count = 0;
+      }
+      if (detail.available_pieces && detail.pieces_count + 1 > detail.available_pieces) {
+        this.makeToast("warning", this.$t("Limit_reached"), this.$t("Warning"));
+      } else {
+        detail.pieces_count++;
+      }
+      this.$forceUpdate();
+    },
+
+    //-----------------------------------decrement Pieces Count ------------------------------\\
+
+    decrementPieces(detail) {
+      if (!detail.pieces_count) {
+        detail.pieces_count = 0;
+      }
+      if (detail.pieces_count > 0) {
+        detail.pieces_count--;
+      }
+      this.$forceUpdate();
     },
 
     //------------------------------Formetted Numbers -------------------------\\
@@ -1529,8 +1589,8 @@ export default {
 
     //---------------------------------Get Product Details ------------------------\\
 
-    Get_Product_Details(product_id, variant_id) {
-      axios.get("/show_product_data/" + product_id +"/"+ variant_id).then(response => {
+    Get_Product_Details(product_id, variant_id, warehouse_id) {
+      axios.get("/show_product_data/" + product_id +"/"+ variant_id + "/" + warehouse_id).then(response => {
         this.product.discount = 0;
         this.product.DiscountNet = 0;
         this.product.discount_Method = "2";
@@ -1547,6 +1607,8 @@ export default {
         this.product.sale_unit_id = response.data.sale_unit_id;
         this.product.is_imei = response.data.is_imei;
         this.product.imei_number = '';
+        this.product.pieces_count = 0;
+        this.product.available_pieces = response.data.available_pieces || 0;
         this.add_product();
         this.Calcul_Total();
       });

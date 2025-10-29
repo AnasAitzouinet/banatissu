@@ -79,6 +79,7 @@
                           <th scope="col">{{$t('ProductName')}}</th>
                           <th scope="col">{{$t('CurrentStock')}}</th>
                           <th scope="col">{{$t('Qty')}}</th>
+                          <th scope="col">{{$t('pieces_count_optional')}}</th>
                           <th scope="col">{{$t('type')}}</th>
                           <th scope="col" class="text-center">
                             <i class="fa fa-trash"></i>
@@ -87,7 +88,7 @@
                       </thead>
                       <tbody>
                         <tr v-if="details.length <=0">
-                          <td colspan="7">{{$t('NodataAvailable')}}</td>
+                          <td colspan="8">{{$t('NodataAvailable')}}</td>
                         </tr>
                         <tr
                           v-for="detail in details"
@@ -128,6 +129,16 @@
                                 </b-input-group-append>
                               </b-input-group>
                             </div>
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              class="form-control"
+                              :placeholder="$t('pieces_count_optional')"
+                              v-model.number="detail.pieces_count"
+                              :disabled="detail.del === 1"
+                              min="0"
+                            >
                           </td>
                           <td>
                             <select

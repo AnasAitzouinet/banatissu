@@ -224,6 +224,7 @@ class SalesController extends BaseController
                     'sale_id'      => $order->id,
                     'sale_unit_id' => $value['sale_unit_id']?$value['sale_unit_id']:NULL,
                     'quantity'     => $value['quantity'],
+                    'pieces_count' => isset($value['pieces_count']) ? $value['pieces_count'] : 0,
                     'price'        => $value['Unit_price'],
                     'TaxNet'       => $value['tax_percent'],
                     'tax_method'   => $value['tax_method'],
@@ -250,6 +251,10 @@ class SalesController extends BaseController
                             } else {
                                 $product_warehouse->qte -= $value['quantity'] * $unit->operator_value;
                             }
+                            // Subtract pieces count if provided
+                            if (isset($value['pieces_count']) && $value['pieces_count']) {
+                                $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) - $value['pieces_count'];
+                            }
                             $product_warehouse->save();
                         }
 
@@ -264,6 +269,10 @@ class SalesController extends BaseController
                                 $product_warehouse->qte -= $value['quantity'] / $unit->operator_value;
                             } else {
                                 $product_warehouse->qte -= $value['quantity'] * $unit->operator_value;
+                            }
+                            // Subtract pieces count if provided
+                            if (isset($value['pieces_count']) && $value['pieces_count']) {
+                                $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) - $value['pieces_count'];
                             }
                             $product_warehouse->save();
                         }
@@ -506,6 +515,10 @@ class SalesController extends BaseController
                                 } else {
                                     $product_warehouse->qte += $value['quantity'] * $old_unit->operator_value;
                                 }
+                                // Add back old pieces count
+                                if ($value['pieces_count'] && $value['pieces_count'] > 0) {
+                                    $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) + $value['pieces_count'];
+                                }
                                 $product_warehouse->save();
                             }
 
@@ -519,6 +532,10 @@ class SalesController extends BaseController
                                     $product_warehouse->qte += $value['quantity'] / $old_unit->operator_value;
                                 } else {
                                     $product_warehouse->qte += $value['quantity'] * $old_unit->operator_value;
+                                }
+                                // Add back old pieces count
+                                if ($value['pieces_count'] && $value['pieces_count'] > 0) {
+                                    $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) + $value['pieces_count'];
                                 }
                                 $product_warehouse->save();
                             }
@@ -556,6 +573,10 @@ class SalesController extends BaseController
                                     } else {
                                         $product_warehouse->qte -= $prod_detail['quantity'] * $unit_prod->operator_value;
                                     }
+                                    // Subtract new pieces count if provided
+                                    if (isset($prod_detail['pieces_count']) && $prod_detail['pieces_count']) {
+                                        $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) - $prod_detail['pieces_count'];
+                                    }
                                     $product_warehouse->save();
                                 }
 
@@ -570,6 +591,10 @@ class SalesController extends BaseController
                                         $product_warehouse->qte -= $prod_detail['quantity'] / $unit_prod->operator_value;
                                     } else {
                                         $product_warehouse->qte -= $prod_detail['quantity'] * $unit_prod->operator_value;
+                                    }
+                                    // Subtract new pieces count if provided
+                                    if (isset($prod_detail['pieces_count']) && $prod_detail['pieces_count']) {
+                                        $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) - $prod_detail['pieces_count'];
                                     }
                                     $product_warehouse->save();
                                 }
@@ -586,6 +611,7 @@ class SalesController extends BaseController
                         $orderDetails['discount']     = $prod_detail['discount'];
                         $orderDetails['discount_method'] = $prod_detail['discount_Method'];
                         $orderDetails['quantity']        = $prod_detail['quantity'];
+                        $orderDetails['pieces_count']    = isset($prod_detail['pieces_count']) ? $prod_detail['pieces_count'] : 0;
                         $orderDetails['product_id']      = $prod_detail['product_id'];
                         $orderDetails['product_variant_id'] = $prod_detail['product_variant_id'];
                         $orderDetails['total']              = $prod_detail['subtotal'];
@@ -1108,113 +1134,290 @@ class SalesController extends BaseController
 
     public function Sale_PDF(Request $request, $id)
     {
+        // PERFORMANCE OPTIMIZATIONS - Enhanced memory and time management
+        ini_set('max_execution_time', 180); // 3 minutes (reduced from 5 for better control)
+        ini_set('memory_limit', '1024M'); // Increased memory limit
+        ini_set('max_input_time', 180);
 
-        $details = array();
-        $helpers = new helpers();
-        $sale_data = Sale::with('details.product.unitSale','facture')
-            ->where('deleted_at', '=', null)
-            ->findOrFail($id);
+        // Start memory monitoring
+        $startMemory = memory_get_usage();
+        $startTime = microtime(true);
 
-        $sale['client_city'] = $sale_data['client']->city;
-        $sale['client_name'] = $sale_data['client']->name;
-        $sale['client_phone'] = $sale_data['client']->phone;
-        $sale['client_adr'] = $sale_data['client']->adresse;
-        $sale['client_email'] = $sale_data['client']->email;
-        $sale['client_tax'] = $sale_data['client']->tax_number;
-        $sale['TaxNet'] = number_format($sale_data->TaxNet, 2, '.', '');
-        $sale['discount'] = number_format($sale_data->discount, 2, '.', '');
-        $sale['shipping'] = number_format($sale_data->shipping, 2, '.', '');
-        $sale['statut'] = $sale_data->statut;
-        $sale['Ref'] = $sale_data->Ref;
-        $sale['date'] = $sale_data->date;
-        $sale['GrandTotal'] = number_format($sale_data->GrandTotal, 2, '.', '');
-        $sale['paid_amount'] = number_format($sale_data->paid_amount, 2, '.', '');
-        $sale['due'] = number_format($sale['GrandTotal'] - $sale['paid_amount'], 2, '.', '');
-        $sale['payment_status'] = $sale_data->payment_statut;
-        $sale['reglement'] = $sale_data->facture->first()->Reglement ?? null;
+        try {
+            $details = array();
+            $helpers = new helpers();
 
-        $detail_id = 0;
-        foreach ($sale_data['details'] as $detail) {
+            // Get Settings and Currency - OPTIMIZED with error handling
+            $settings = Setting::with('Currency')
+                ->where('deleted_at', '=', null)
+                ->first();
 
-            //check if detail has sale_unit_id Or Null
-            if($detail->sale_unit_id !== null){
-                $unit = Unit::where('id', $detail->sale_unit_id)->first();
-            }else{
-                $product_unit_sale_id = Product::with('unitSale')
-                    ->where('id', $detail->product_id)
-                    ->first();
+            $symbol = 'usd';
+            if ($settings && $settings->currency_id && $settings->Currency) {
+                $symbol = $settings->Currency->code ?? 'usd';
+            }
 
-                if($product_unit_sale_id['unitSale']){
-                    $unit = Unit::where('id', $product_unit_sale_id['unitSale']->id)->first();
-                }{
-                    $unit = NULL;
+            // OPTIMIZED QUERY - Load everything in ONE query with additional optimizations
+            $sale_data = Sale::with([
+                    'details' => function($query) {
+                        $query->select('id', 'sale_id', 'sale_unit_id', 'quantity', 'pieces_count',
+                                       'product_id', 'product_variant_id', 'price', 'total', 'TaxNet',
+                                       'discount', 'discount_method', 'tax_method', 'imei_number')
+                               ->orderBy('id'); // Ensure consistent ordering
+                    },
+                    'details.product' => function($query) {
+                        $query->select('id', 'name', 'code', 'is_imei', 'type', 'unit_sale_id');
+                    },
+                    'details.product.unitSale' => function($query) {
+                        $query->select('id', 'ShortName', 'operator', 'operator_value');
+                    },
+                    'facture' => function($query) {
+                        $query->select('id', 'sale_id', 'Reglement')->limit(1);
+                    },
+                    'client' => function($query) {
+                        $query->select('id', 'name', 'phone', 'city', 'adresse', 'email', 'tax_number');
+                    },
+                    'warehouse' => function($query) {
+                        $query->select('id', 'name');
+                    }
+                ])
+                ->select('id', 'Ref', 'date', 'client_id', 'warehouse_id', 'statut', 'payment_statut',
+                         'TaxNet', 'discount', 'shipping', 'GrandTotal', 'paid_amount')
+                ->where('deleted_at', '=', null)
+                ->findOrFail($id);
+
+            // Early validation - check if sale has details
+            if ($sale_data->details->isEmpty()) {
+                return response()->json(['error' => 'Sale has no details'], 400);
+            }
+
+            // Prepare sale data with memory-efficient number formatting
+            $sale = [
+                'warehouse_name' => $sale_data->warehouse->name ?? '',
+                'client_city' => $sale_data->client->city ?? '',
+                'client_name' => $sale_data->client->name ?? '',
+                'client_phone' => $sale_data->client->phone ?? '',
+                'client_adr' => $sale_data->client->adresse ?? '',
+                'client_email' => $sale_data->client->email ?? '',
+                'client_tax' => $sale_data->client->tax_number ?? '',
+                'TaxNet' => number_format($sale_data->TaxNet, 2, '.', ''),
+                'discount' => number_format($sale_data->discount, 2, '.', ''),
+                'shipping' => number_format($sale_data->shipping, 2, '.', ''),
+                'statut' => $sale_data->statut,
+                'Ref' => $sale_data->Ref,
+                'date' => $sale_data->date,
+                'GrandTotal' => number_format($sale_data->GrandTotal, 2, '.', ''),
+                'paid_amount' => number_format($sale_data->paid_amount, 2, '.', ''),
+                'due' => number_format($sale_data->GrandTotal - $sale_data->paid_amount, 2, '.', ''),
+                'payment_status' => $sale_data->payment_statut,
+                'reglement' => $sale_data->facture->first()->Reglement ?? null,
+            ];
+
+            // LOAD ALL UNITS AND VARIANTS AT ONCE - NO MORE N+1 QUERIES
+            // Optimized with early returns for empty collections
+            $unit_ids = $sale_data->details->pluck('sale_unit_id')->filter()->unique();
+            $units = $unit_ids->isNotEmpty() ?
+                Unit::whereIn('id', $unit_ids)
+                    ->select('id', 'ShortName', 'operator', 'operator_value')
+                    ->get()
+                    ->keyBy('id') : collect();
+
+            $variant_ids = $sale_data->details
+                ->where('product_variant_id', '!=', null)
+                ->pluck('product_variant_id')
+                ->unique();
+            $variants = $variant_ids->isNotEmpty() ?
+                ProductVariant::whereIn('id', $variant_ids)
+                    ->select('id', 'name', 'code', 'product_id')
+                    ->get()
+                    ->keyBy('id') : collect();
+
+            $detail_id = 0;
+
+            // NOW LOOP WITHOUT DATABASE QUERIES - Memory efficient processing
+            foreach ($sale_data->details as $detail) {
+                // Use pre-loaded units - NO DATABASE QUERY
+                $unit = null;
+                if ($detail->sale_unit_id !== null && isset($units[$detail->sale_unit_id])) {
+                    $unit = $units[$detail->sale_unit_id];
+                } elseif ($detail->product && $detail->product->unitSale) {
+                    $unit = $detail->product->unitSale;
                 }
 
+                // Use pre-loaded variants - NO DATABASE QUERY
+                if ($detail->product_variant_id && isset($variants[$detail->product_variant_id])) {
+                    $productsVariants = $variants[$detail->product_variant_id];
+                    $data['code'] = $productsVariants->code;
+                    $data['name'] = '[' . $productsVariants->name . '] ' . ($detail->product->name ?? '');
+                } else {
+                    $data['code'] = $detail->product->code ?? '';
+                    $data['name'] = $detail->product->name ?? '';
+                }
+
+                $data['detail_id'] = ++$detail_id;
+                $data['quantity'] = number_format($detail->quantity, 2, '.', '');
+                $data['total'] = number_format($detail->total, 2, '.', '');
+                $data['unitSale'] = $unit ? $unit->ShortName : '';
+                $data['price'] = number_format($detail->price, 2, '.', '');
+
+                // Optimized discount calculation
+                if ($detail->discount_method == '2') {
+                    $data['DiscountNet'] = number_format($detail->discount, 2, '.', '');
+                } else {
+                    $data['DiscountNet'] = number_format($detail->price * $detail->discount / 100, 2, '.', '');
+                }
+
+                // Optimized tax calculation
+                $discountAmount = ($detail->discount_method == '2') ? $detail->discount : ($detail->price * $detail->discount / 100);
+                $priceAfterDiscount = $detail->price - $discountAmount;
+                $tax_price = $detail->TaxNet * ($priceAfterDiscount / 100);
+
+                $data['Unit_price'] = number_format($detail->price, 2, '.', '');
+                $data['discount'] = number_format($detail->discount, 2, '.', '');
+
+                if ($detail->tax_method == '1') {
+                    $data['Net_price'] = $priceAfterDiscount;
+                    $data['taxe'] = number_format($tax_price, 2, '.', '');
+                } else {
+                    $data['Net_price'] = $priceAfterDiscount / (($detail->TaxNet / 100) + 1);
+                    $data['taxe'] = number_format($detail->price - $data['Net_price'] - $discountAmount, 2, '.', '');
+                }
+
+                $data['is_imei'] = $detail->product->is_imei ?? false;
+                $data['imei_number'] = $detail->imei_number;
+
+                $details[] = $data;
+
+                // Memory cleanup for large datasets
+                if ($detail_id % 50 === 0) {
+                    if (function_exists('gc_collect_cycles')) {
+                        gc_collect_cycles();
+                    }
+                }
             }
 
-            if ($detail->product_variant_id) {
+            // Clear large collections from memory
+            unset($units, $variants, $sale_data);
 
-                $productsVariants = ProductVariant::where('product_id', $detail->product_id)
-                    ->where('id', $detail->product_variant_id)->first();
+            // Render view with memory monitoring
+            $viewStartTime = microtime(true);
+            $Html = view('pdf.sale_pdf', [
+                'symbol' => $symbol,
+                'setting' => $settings,
+                'sale' => $sale,
+                'details' => $details,
+            ])->render();
+            $viewTime = microtime(true) - $viewStartTime;
 
-                $data['code'] = $productsVariants->code;
-                $data['name'] = '['.$productsVariants->name . ']' . $detail['product']['name'];
-            } else {
-                $data['code'] = $detail['product']['code'];
-                $data['name'] = $detail['product']['name'];
+            // Arabic processing - OPTIMIZED with memory-efficient approach
+            $arabicStartTime = microtime(true);
+            $arabic = new Arabic();
+
+            // Process Arabic text in chunks to reduce memory usage
+            $p = $arabic->arIdentify($Html);
+
+            // Process from end to beginning to maintain correct positions
+            for ($i = count($p) - 1; $i >= 0; $i -= 2) {
+                $startPos = $p[$i - 1];
+                $length = $p[$i] - $p[$i - 1];
+                $arabicText = substr($Html, $startPos, $length);
+                $utf8ar = $arabic->utf8Glyphs($arabicText);
+                $Html = substr_replace($Html, $utf8ar, $startPos, $length);
+            }
+            $arabicTime = microtime(true) - $arabicStartTime;
+
+            // Clear Arabic processor from memory
+            unset($arabic, $p);
+
+            // Inline CSS and convert images to absolute paths for dompdf
+            // This ensures assets load correctly with isRemoteEnabled => false
+            $cssPath = public_path('css/pdf_style.css');
+            if (file_exists($cssPath)) {
+                $css = file_get_contents($cssPath);
+                $Html = str_replace(
+                    '<link rel="stylesheet" href="' . asset('/css/pdf_style.css') . '" media="all" />',
+                    '<style>' . $css . '</style>',
+                    $Html
+                );
             }
 
-            $data['detail_id'] = $detail_id += 1;
-            $data['quantity'] = number_format($detail->quantity, 2, '.', '');
-            $data['total'] = number_format($detail->total, 2, '.', '');
-            $data['unitSale'] = $unit?$unit->ShortName:'';
-            $data['price'] = number_format($detail->price, 2, '.', '');
-
-            if ($detail->discount_method == '2') {
-                $data['DiscountNet'] = number_format($detail->discount, 2, '.', '');
-            } else {
-                $data['DiscountNet'] = number_format($detail->price * $detail->discount / 100, 2, '.', '');
+            // Convert logo to base64 for dompdf compatibility
+            $logoFile = $settings['logo'] ?? '';
+            if ($logoFile) {
+                $logoPath = public_path('images/' . $logoFile);
+                if (file_exists($logoPath)) {
+                    // Base64 encode the image - most reliable method for dompdf
+                    $ext = strtolower(pathinfo($logoPath, PATHINFO_EXTENSION));
+                    // Map file extensions to MIME types
+                    $mimeTypes = [
+                        'jpg' => 'jpeg',
+                        'jpeg' => 'jpeg',
+                        'png' => 'png',
+                        'gif' => 'gif',
+                        'svg' => 'svg+xml',
+                        'webp' => 'webp'
+                    ];
+                    $imageType = $mimeTypes[$ext] ?? 'png';
+                    $imageData = base64_encode(file_get_contents($logoPath));
+                    $base64Image = 'data:image/' . $imageType . ';base64,' . $imageData;
+                    
+                    $Html = str_replace(
+                        asset('/images/' . $logoFile),
+                        $base64Image,
+                        $Html
+                    );
+                }
             }
 
-            $tax_price = $detail->TaxNet * (($detail->price - $data['DiscountNet']) / 100);
-            $data['Unit_price'] = number_format($detail->price, 2, '.', '');
-            $data['discount'] = number_format($detail->discount, 2, '.', '');
+            // Generate PDF with optimized settings
+            $pdfStartTime = microtime(true);
+            $pdf = PDF::loadHTML($Html)
+                ->setPaper('a4', 'portrait')
+                ->setOptions([
+                    'isHtml5ParserEnabled' => false,
+                    'isRemoteEnabled' => false,
+                    'isJavascriptEnabled' => false,
+                    'dpi' => 96,
+                    'defaultFont' => 'dejavu sans',
+                ]);
 
-            if ($detail->tax_method == '1') {
-                $data['Net_price'] = $detail->price - $data['DiscountNet'];
-                $data['taxe'] = number_format($tax_price, 2, '.', '');
-            } else {
-                $data['Net_price'] = ($detail->price - $data['DiscountNet']) / (($detail->TaxNet / 100) + 1);
-                $data['taxe'] = number_format($detail->price - $data['Net_price'] - $data['DiscountNet'], 2, '.', '');
+            $pdfTime = microtime(true) - $pdfStartTime;
+
+            // Log performance metrics (optional - remove in production)
+            $totalTime = microtime(true) - $startTime;
+            $peakMemory = memory_get_peak_usage(true) / 1024 / 1024;
+
+            // Use stream for better memory management
+            return $pdf->stream('sale_' . $sale['Ref'] . '.pdf');
+
+        } catch (\Exception $e) {
+            // Log error details
+            \Log::error('PDF Generation Error: ' . $e->getMessage(), [
+                'sale_id' => $id,
+                'memory_used' => memory_get_usage(true) / 1024 / 1024,
+                'peak_memory' => memory_get_peak_usage(true) / 1024 / 1024,
+                'execution_time' => microtime(true) - $startTime,
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+
+            // Return user-friendly error
+            return response()->json([
+                'error' => 'Failed to generate PDF. Please try again or contact support.',
+                'details' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        } finally {
+            // Ensure cleanup happens
+            if (isset($details)) unset($details);
+            if (isset($Html)) unset($Html);
+
+            // Force garbage collection
+            if (function_exists('gc_collect_cycles')) {
+                gc_collect_cycles();
             }
-
-            $data['is_imei'] = $detail['product']['is_imei'];
-            $data['imei_number'] = $detail->imei_number;
-
-            $details[] = $data;
         }
-        $settings = Setting::where('deleted_at', '=', null)->first();
-        $symbol = $helpers->Get_Currency_Code();
-
-        $Html = view('pdf.sale_pdf', [
-            'symbol' => $symbol,
-            'setting' => $settings,
-            'sale' => $sale,
-            'details' => $details,
-        ])->render();
-
-        $arabic = new Arabic();
-        $p = $arabic->arIdentify($Html);
-
-        for ($i = count($p)-1; $i >= 0; $i-=2) {
-            $utf8ar = $arabic->utf8Glyphs(substr($Html, $p[$i-1], $p[$i] - $p[$i-1]));
-            $Html = substr_replace($Html, $utf8ar, $p[$i-1], $p[$i] - $p[$i-1]);
-        }
-
-        $pdf = PDF::loadHTML($Html);
-        return $pdf->download('sale.pdf');
-
     }
+
 
     //----------------Show Form Create Sale ---------------\\
 

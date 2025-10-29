@@ -12,7 +12,7 @@
                 <!-- Name -->
                 <b-col md="6" class="mb-2">
                   <validation-provider
-                    name="Name"
+                    name="Name x"
                     :rules="{required:true , min:3 , max:55}"
                     v-slot="validationContext"
                   >
@@ -332,6 +332,7 @@
                         :placeholder="$t('Enter_Stock_alert')"
                         v-model="product.stock_alert"
                       ></b-form-input>
+                      
                       <b-form-invalid-feedback
                         id="StockAlert-feedback"
                       >{{ validationContext.errors[0] }}</b-form-invalid-feedback>
@@ -353,7 +354,13 @@
                       style="color: #ffff;margin-left: 10px;"
                       @click="add_variant(tag)"
                       class="ms-3 btn btn-md btn-primary"
-                    >{{$t('Add')}}</a>
+                    >{{$t('Add')}}</a><a
+                      style="color: #ffff;margin-left: 10px;"
+                      @click="delete_all_variants()"
+                      class="ms-3 btn btn-md btn-primary"
+                    >
+                    delete
+                  </a>
                   </div>
                 </div>
 

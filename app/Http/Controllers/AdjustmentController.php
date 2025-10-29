@@ -138,6 +138,12 @@ class AdjustmentController extends BaseController
 
                         if ($product_warehouse) {
                             $product_warehouse->qte += $value['quantity'];
+                            
+                            // Update pieces count if provided
+                            if (isset($value['pieces_count']) && $value['pieces_count']) {
+                                $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) + $value['pieces_count'];
+                            }
+                            
                             $product_warehouse->save();
                         }
 
@@ -149,6 +155,12 @@ class AdjustmentController extends BaseController
 
                         if ($product_warehouse) {
                             $product_warehouse->qte += $value['quantity'];
+                            
+                            // Update pieces count if provided
+                            if (isset($value['pieces_count']) && $value['pieces_count']) {
+                                $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) + $value['pieces_count'];
+                            }
+                            
                             $product_warehouse->save();
                         }
                     }
@@ -163,6 +175,12 @@ class AdjustmentController extends BaseController
 
                         if ($product_warehouse) {
                             $product_warehouse->qte -= $value['quantity'];
+                            
+                            // Subtract pieces count if provided
+                            if (isset($value['pieces_count']) && $value['pieces_count']) {
+                                $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) - $value['pieces_count'];
+                            }
+                            
                             $product_warehouse->save();
                         }
 
@@ -174,6 +192,12 @@ class AdjustmentController extends BaseController
 
                         if ($product_warehouse) {
                             $product_warehouse->qte -= $value['quantity'];
+                            
+                            // Subtract pieces count if provided
+                            if (isset($value['pieces_count']) && $value['pieces_count']) {
+                                $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) - $value['pieces_count'];
+                            }
+                            
                             $product_warehouse->save();
                         }
                     }
@@ -300,6 +324,12 @@ class AdjustmentController extends BaseController
 
                         if ($product_warehouse) {
                             $product_warehouse->qte += $product_detail['quantity'];
+                            
+                            // Update pieces count if provided
+                            if (isset($product_detail['pieces_count']) && $product_detail['pieces_count']) {
+                                $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) + $product_detail['pieces_count'];
+                            }
+                            
                             $product_warehouse->save();
                         }
 
@@ -311,11 +341,17 @@ class AdjustmentController extends BaseController
 
                         if ($product_warehouse) {
                             $product_warehouse->qte += $product_detail['quantity'];
+                            
+                            // Update pieces count if provided
+                            if (isset($product_detail['pieces_count']) && $product_detail['pieces_count']) {
+                                $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) + $product_detail['pieces_count'];
+                            }
+                            
                             $product_warehouse->save();
                         }
                     }
                 } else {
-                    if ($value['product_variant_id'] !== null) {
+                    if ($product_detail['product_variant_id'] !== null) {
                         $product_warehouse = product_warehouse::where('deleted_at', '=', null)
                             ->where('warehouse_id', $request->warehouse_id)
                             ->where('product_id', $product_detail['product_id'])
@@ -324,6 +360,12 @@ class AdjustmentController extends BaseController
 
                         if ($product_warehouse) {
                             $product_warehouse->qte -= $product_detail['quantity'];
+                            
+                            // Subtract pieces count if provided
+                            if (isset($product_detail['pieces_count']) && $product_detail['pieces_count']) {
+                                $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) - $product_detail['pieces_count'];
+                            }
+                            
                             $product_warehouse->save();
                         }
 
@@ -335,6 +377,12 @@ class AdjustmentController extends BaseController
 
                         if ($product_warehouse) {
                             $product_warehouse->qte -= $product_detail['quantity'];
+                            
+                            // Subtract pieces count if provided
+                            if (isset($product_detail['pieces_count']) && $product_detail['pieces_count']) {
+                                $product_warehouse->pieces_count = ($product_warehouse->pieces_count ?? 0) - $product_detail['pieces_count'];
+                            }
+                            
                             $product_warehouse->save();
                         }
                     }

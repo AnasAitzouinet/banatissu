@@ -8,7 +8,7 @@ class SaleDetail extends Model
 {
 
     protected $fillable = [
-        'id', 'date', 'sale_id','sale_unit_id', 'quantity', 'product_id', 'total', 'product_variant_id',
+        'id', 'date', 'sale_id','sale_unit_id', 'quantity', 'pieces_count', 'product_id', 'total', 'product_variant_id',
         'price', 'TaxNet', 'discount', 'discount_method', 'tax_method',
     ];
 
@@ -16,6 +16,7 @@ class SaleDetail extends Model
         'id' => 'integer',
         'total' => 'double',
         'quantity' => 'double',
+        'pieces_count' => 'double',
         'sale_id' => 'integer',
         'sale_unit_id' => 'integer',
         'product_id' => 'integer',

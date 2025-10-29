@@ -17,7 +17,11 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 
 mix.js('resources/src/main.js', 'public').js('resources/src/login.js', 'public')
-    .vue();
+    .vue()
+    .options({
+        processCssUrls: false,
+        postCss: [],
+    });
 
     mix.webpackConfig({
         output: {
@@ -30,6 +34,11 @@ mix.js('resources/src/main.js', 'public').js('resources/src/login.js', 'public')
             new CleanWebpackPlugin({
                 cleanOnceBeforeBuildPatterns: ['./js/*']
               }),
-        ]
+        ],
+        resolve: {
+            alias: {
+                'node-sass': require.resolve('sass')
+            }
+        }
     });
 

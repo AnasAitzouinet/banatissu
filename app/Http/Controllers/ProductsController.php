@@ -101,7 +101,12 @@ class ProductsController extends BaseController
               ->where('deleted_at', '=', null)
               ->sum('qte');
 
+              $product_warehouse_total_pieces = product_warehouse::where('product_id', $product->id)
+              ->where('deleted_at', '=', null)
+              ->sum('pieces_count');
+
               $item['quantity'] = $product_warehouse_total_qty .' '.$product['unit']->ShortName;
+              $item['pieces_count'] = $product_warehouse_total_pieces;
 
             }elseif($product->type == 'is_variant'){
 
@@ -128,7 +133,12 @@ class ProductsController extends BaseController
                   ->where('deleted_at', '=', null)
                   ->sum('qte');
 
+                  $product_warehouse_total_pieces = product_warehouse::where('product_id', $product->id)
+                  ->where('deleted_at', '=', null)
+                  ->sum('pieces_count');
+
                   $item['quantity'] = $product_warehouse_total_qty .' '.$product['unit']->ShortName;
+                  $item['pieces_count'] = $product_warehouse_total_pieces;
 
               }else{
                   $item['type'] = 'Service';
@@ -136,6 +146,7 @@ class ProductsController extends BaseController
                   $item['cost'] = '----';
                   $item['quantity'] = '----';
                   $item['unit'] = '----';
+                  $item['pieces_count'] = '----';
 
                   $item['price'] = number_format($product->price, 2, '.', ',');
               }
@@ -1277,7 +1288,7 @@ class ProductsController extends BaseController
 
 
     //------------ Get product By ID -----------------\\
-    public function show_product_data($id , $variant_id)
+    public function show_product_data($id , $variant_id, $warehouse_id = null)
     {
 
         $Product_data = Product::with('unit')
@@ -1398,6 +1409,22 @@ class ProductsController extends BaseController
             $item['Net_price'] = $price;
             $item['tax_price'] = 0;
             $item['tax_cost'] = 0;
+        }
+
+        // Get available pieces count from warehouse if warehouse_id is provided
+        if ($warehouse_id) {
+            $query = product_warehouse::where('product_id', $id)
+                ->where('warehouse_id', $warehouse_id)
+                ->where('deleted_at', '=', null);
+            
+            if ($variant_id && $variant_id != 0) {
+                $query->where('product_variant_id', $variant_id);
+            }
+            
+            $product_warehouse = $query->first();
+            $item['available_pieces'] = $product_warehouse ? ($product_warehouse->pieces_count ?? 0) : 0;
+        } else {
+            $item['available_pieces'] = 0;
         }
 
         $data[] = $item;

@@ -411,6 +411,12 @@ export default {
           thClass: "text-left"
         },
         {
+          label: this.$t("Pieces"),
+          field: "pieces_count",
+          tdClass: "text-left",
+          thClass: "text-left"
+        },
+        {
           label: this.$t("Action"),
           field: "actions",
           html: true,
@@ -437,7 +443,8 @@ export default {
           { title: "cost", dataKey: "cost" },
           { title: "price", dataKey: "price" },
           { title: "unit", dataKey: "unit" },
-          { title: "quantity", dataKey: "quantity" }
+          { title: "quantity", dataKey: "quantity" },
+          { title: "pieces", dataKey: "pieces_count" }
         ];
 
        // Create a copy of self.reports for PDF generation
