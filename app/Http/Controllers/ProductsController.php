@@ -107,6 +107,7 @@ class ProductsController extends BaseController
 
               $item['quantity'] = $product_warehouse_total_qty .' '.$product['unit']->ShortName;
               $item['pieces_count'] = $product_warehouse_total_pieces;
+              $item['stock_status'] = $this->stockStatus($product_warehouse_total_qty, $product->stock_alert);
 
             }elseif($product->type == 'is_variant'){
 
@@ -139,6 +140,7 @@ class ProductsController extends BaseController
 
                   $item['quantity'] = $product_warehouse_total_qty .' '.$product['unit']->ShortName;
                   $item['pieces_count'] = $product_warehouse_total_pieces;
+                  $item['stock_status'] = $this->stockStatus($product_warehouse_total_qty, $product->stock_alert);
 
               }else{
                   $item['type'] = 'Service';
@@ -147,6 +149,7 @@ class ProductsController extends BaseController
                   $item['quantity'] = '----';
                   $item['unit'] = '----';
                   $item['pieces_count'] = '----';
+                  $item['stock_status'] = 'service';
 
                   $item['price'] = number_format($product->price, 2, '.', ',');
               }
@@ -174,6 +177,22 @@ class ProductsController extends BaseController
             'products' => $data,
             'totalRows' => $totalRows,
         ]);
+    }
+
+    private function stockStatus($quantity, $stockAlert)
+    {
+        $quantity = (float) $quantity;
+        $stockAlert = (float) $stockAlert;
+
+        if ($quantity <= 0) {
+            return 'out';
+        }
+
+        if ($stockAlert > 0 && $quantity <= $stockAlert) {
+            return 'low';
+        }
+
+        return 'available';
     }
 
     //-------------- Store new  Product  ---------------\\
@@ -466,6 +485,9 @@ class ProductsController extends BaseController
 
                 //--Store Product Warehouse
                 $warehouses = Warehouse::where('deleted_at', null)->pluck('id')->toArray();
+                $initialWarehouseId = $request['warehouse_id'] ? (int) $request['warehouse_id'] : (count($warehouses) ? (int) $warehouses[0] : null);
+                $initialQuantity = $request['qte'] !== null && $request['qte'] !== '' ? (float) $request['qte'] : 0;
+                $initialPieces = $request['pieces_count'] !== null && $request['pieces_count'] !== '' ? (float) $request['pieces_count'] : 0;
                 if ($warehouses) {
                     $Product_variants = ProductVariant::where('product_id', $Product->id)
                         ->where('deleted_at', null)
@@ -478,6 +500,8 @@ class ProductsController extends BaseController
                                     'product_id'         => $Product->id,
                                     'warehouse_id'       => $warehouse,
                                     'product_variant_id' => $product_variant->id,
+                                    'qte'                => 0,
+                                    'pieces_count'       => 0,
                                     'manage_stock'       => $manage_stock,
                                 ];
                             }
@@ -485,6 +509,8 @@ class ProductsController extends BaseController
                             $product_warehouse[] = [
                                 'product_id'   => $Product->id,
                                 'warehouse_id' => $warehouse,
+                                'qte'          => $warehouse == $initialWarehouseId ? $initialQuantity : 0,
+                                'pieces_count' => $warehouse == $initialWarehouseId ? $initialPieces : 0,
                                 'manage_stock' => $manage_stock,
                             ];
                         }
@@ -831,6 +857,8 @@ class ProductsController extends BaseController
                                             'product_id'         => $id,
                                             'warehouse_id'       => $warehouse,
                                             'product_variant_id' => $ProductVariantDT->id,
+                                            'qte'                => 0,
+                                            'pieces_count'       => 0,
                                             'manage_stock'       => $manage_stock,
                                         ];
 
@@ -869,6 +897,8 @@ class ProductsController extends BaseController
                                         'product_id'         => $id,
                                         'warehouse_id'       => $warehouse,
                                         'product_variant_id' => $ProductVarDT->id,
+                                        'qte'                => 0,
+                                        'pieces_count'       => 0,
                                         'manage_stock'       => $manage_stock,
                                     ];
                                 }
@@ -900,6 +930,8 @@ class ProductsController extends BaseController
                                     'product_id'         => $id,
                                     'warehouse_id'       => $warehouse,
                                     'product_variant_id' => null,
+                                    'qte'                => 0,
+                                    'pieces_count'       => 0,
                                     'manage_stock'       => $manage_stock,
                                 ];
 
@@ -975,6 +1007,20 @@ class ProductsController extends BaseController
 
                 $Product->image = $filename;
                 $Product->save();
+
+                if ($request['type'] != 'is_service' && $request['warehouse_id']) {
+                    $productWarehouse = product_warehouse::where('product_id', $id)
+                        ->where('warehouse_id', $request['warehouse_id'])
+                        ->where('deleted_at', '=', null)
+                        ->whereNull('product_variant_id')
+                        ->first();
+
+                    if ($productWarehouse) {
+                        $productWarehouse->qte = $request['qte'] !== null && $request['qte'] !== '' ? (float) $request['qte'] : 0;
+                        $productWarehouse->pieces_count = $request['pieces_count'] !== null && $request['pieces_count'] !== '' ? (float) $request['pieces_count'] : 0;
+                        $productWarehouse->save();
+                    }
+                }
 
             }, 10);
 
@@ -1503,10 +1549,18 @@ class ProductsController extends BaseController
         $categories = Category::where('deleted_at', null)->get(['id', 'name']);
         // $categories = Category::where('deleted_at', null)->get(['id', 'name']);
         $brands = Brand::where('deleted_at', null)->get(['id', 'name']);
+        $user_auth = auth()->user();
+        if($user_auth->is_all_warehouses){
+            $warehouses = Warehouse::where('deleted_at', '=', null)->get(['id', 'name']);
+        }else{
+            $warehouses_id = UserWarehouse::where('user_id', $user_auth->id)->pluck('warehouse_id')->toArray();
+            $warehouses = Warehouse::where('deleted_at', '=', null)->whereIn('id', $warehouses_id)->get(['id', 'name']);
+        }
         $units = Unit::where('deleted_at', null)->where('base_unit', null)->get();
         return response()->json([
             'categories' => $categories,
             'brands' => $brands,
+            'warehouses' => $warehouses,
             'units' => $units,
         ]);
 
@@ -1604,6 +1658,14 @@ class ProductsController extends BaseController
         $item['stock_alert'] = $Product->stock_alert;
         $item['TaxNet'] = $Product->TaxNet;
         $item['note'] = $Product->note ? $Product->note : '';
+        $productWarehouse = product_warehouse::where('product_id', $Product->id)
+            ->where('deleted_at', '=', null)
+            ->whereNull('product_variant_id')
+            ->orderBy('warehouse_id')
+            ->first();
+        $item['warehouse_id'] = $productWarehouse ? $productWarehouse->warehouse_id : '';
+        $item['qte'] = $productWarehouse ? (float) $productWarehouse->qte : 0;
+        $item['pieces_count'] = $productWarehouse ? (float) ($productWarehouse->pieces_count ?? 0) : 0;
         $item['images'] = [];
         if ($Product->image != '' && $Product->image != 'no-image.png') {
             foreach (explode(',', $Product->image) as $img) {
@@ -1649,6 +1711,13 @@ class ProductsController extends BaseController
         $data = $item;
         $categories = Category::where('deleted_at', null)->get(['id', 'name']);
         $brands = Brand::where('deleted_at', null)->get(['id', 'name']);
+        $user_auth = auth()->user();
+        if($user_auth->is_all_warehouses){
+            $warehouses = Warehouse::where('deleted_at', '=', null)->get(['id', 'name']);
+        }else{
+            $warehouses_id = UserWarehouse::where('user_id', $user_auth->id)->pluck('warehouse_id')->toArray();
+            $warehouses = Warehouse::where('deleted_at', '=', null)->whereIn('id', $warehouses_id)->get(['id', 'name']);
+        }
 
         $product_units = Unit::where('id', $Product->unit_id)
                               ->orWhere('base_unit', $Product->unit_id)
@@ -1664,6 +1733,7 @@ class ProductsController extends BaseController
             'product' => $data,
             'categories' => $categories,
             'brands' => $brands,
+            'warehouses' => $warehouses,
             'units' => $units,
             'units_sub' => $product_units,
         ]);

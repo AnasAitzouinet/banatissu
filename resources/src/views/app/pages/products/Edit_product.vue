@@ -352,6 +352,43 @@
                   </validation-provider>
                 </b-col>
 
+                <b-col md="6" class="mb-2" v-if="product.type != 'is_service'">
+                  <validation-provider name="Initial Quantity" :rules="{ regex: /^\d*\.?\d*$/}" v-slot="validationContext">
+                    <b-form-group :label="$t('InitialQuantityMeters')">
+                      <b-form-input
+                        :state="getValidationState(validationContext)"
+                        :placeholder="$t('InitialQuantityMeters')"
+                        v-model.number="product.qte"
+                      ></b-form-input>
+                      <b-form-invalid-feedback>{{ validationContext.errors[0] }}</b-form-invalid-feedback>
+                    </b-form-group>
+                  </validation-provider>
+                </b-col>
+
+                <b-col md="6" class="mb-2" v-if="product.type != 'is_service'">
+                  <validation-provider name="Initial Pieces" :rules="{ regex: /^\d*\.?\d*$/}" v-slot="validationContext">
+                    <b-form-group :label="$t('InitialPieces')">
+                      <b-form-input
+                        :state="getValidationState(validationContext)"
+                        :placeholder="$t('InitialPieces')"
+                        v-model.number="product.pieces_count"
+                      ></b-form-input>
+                      <b-form-invalid-feedback>{{ validationContext.errors[0] }}</b-form-invalid-feedback>
+                    </b-form-group>
+                  </validation-provider>
+                </b-col>
+
+                <b-col md="6" class="mb-2" v-if="product.type != 'is_service'">
+                  <b-form-group :label="$t('Warehouse')">
+                    <v-select
+                      :placeholder="$t('Choose_Warehouse')"
+                      :reduce="label => label.value"
+                      v-model="product.warehouse_id"
+                      :options="warehouses.map(warehouse => ({label: warehouse.name, value: warehouse.id}))"
+                    />
+                  </b-form-group>
+                </b-col>
+
                 <div class="col-md-9 mb-3 mt-3" v-if="product.type == 'is_variant'">
                   <div class="d-flex">
                     <input
@@ -517,6 +554,7 @@ export default {
       units: [],
       units_sub: [],
       brands: [],
+      warehouses: [],
       roles: {},
       variants: [],
       product: {
@@ -534,6 +572,9 @@ export default {
         unit_sale_id: "",
         unit_purchase_id: "",
         stock_alert: "",
+        qte: 0,
+        pieces_count: 0,
+        warehouse_id: "",
         image: "",
         note: "",
         is_variant: false,
@@ -661,6 +702,7 @@ export default {
           this.images = response.data.product.images;
           this.categories = response.data.categories;
           this.brands = response.data.brands;
+          this.warehouses = response.data.warehouses || [];
           this.units = response.data.units;
           this.units_sub = response.data.units_sub;
           this.Subcategories = response.data.Subcategories;

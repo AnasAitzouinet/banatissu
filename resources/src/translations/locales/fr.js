@@ -2,6 +2,10 @@
 
 
 export default {
+    Stock: 'Stock',
+    Warehouse: 'Entrepôt',
+    InitialQuantityMeters: 'Quantité initiale (mètres)',
+    InitialPieces: 'Pièces initiales',
     Draft_Created_successfully: 'Brouillon créé avec succès',
     Draft_Sale_Deleted: 'Vente du brouillon supprimée',
     Inventory_Valuation_Based_on_Average_Cost: 'Évaluation des stocks basée sur le coût moyen',

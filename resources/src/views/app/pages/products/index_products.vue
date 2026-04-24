@@ -109,6 +109,9 @@
               alt="image"
             ></b-img>
           </span>
+          <span v-else-if="props.column.field == 'quantity'">
+            <span :class="stockBadgeClass(props.row.stock_status)">{{ props.row.quantity }}</span>
+          </span>
         </template>
       </vue-good-table>
 
@@ -407,6 +410,7 @@ export default {
         {
           label: this.$t("Quantity"),
           field: "quantity",
+          html: true,
           tdClass: "text-left",
           thClass: "text-left"
         },
@@ -431,6 +435,19 @@ export default {
    
 
     //-------------------------------------- Products PDF ------------------------------\\
+    stockBadgeClass(status) {
+      if (status === "out") {
+        return "badge badge-outline-danger";
+      }
+      if (status === "low") {
+        return "badge badge-outline-info";
+      }
+      if (status === "available") {
+        return "badge badge-outline-success";
+      }
+      return "";
+    },
+
     Product_PDF() {
     var self = this;
 

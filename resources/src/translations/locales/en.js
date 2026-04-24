@@ -1,6 +1,10 @@
 //Language Anglais
 
 export default {
+    Stock:'Stock',
+    Warehouse:'Warehouse',
+    InitialQuantityMeters:'Initial quantity (meters)',
+    InitialPieces:'Initial pieces',
     Draft_Created_successfully:'Draft Created successfully',
     Draft_Sale_Deleted:'Draft Sale Deleted',
     Inventory_Valuation_Based_on_Average_Cost:'Inventory Valuation Based on Average Cost',

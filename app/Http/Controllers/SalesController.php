@@ -920,6 +920,8 @@ class SalesController extends BaseController
         $sale_details['paid_amount'] = number_format($sale_data->paid_amount, 2, '.', '');
         $sale_details['due'] = number_format($sale_details['GrandTotal'] - $sale_details['paid_amount'], 2, '.', '');
         $sale_details['payment_status'] = $sale_data->payment_statut;
+        $sale_details['total_metrage'] = number_format($sale_data->details->sum('quantity'), 2, '.', '');
+        $sale_details['total_pieces'] = number_format($sale_data->details->sum('pieces_count'), 2, '.', '');
 
         if (SaleReturn::where('sale_id', $id)->where('deleted_at', '=', null)->exists()) {
             $sellReturn = SaleReturn::where('sale_id', $id)->where('deleted_at', '=', null)->first();
@@ -960,6 +962,7 @@ class SalesController extends BaseController
             }
 
             $data['quantity'] = $detail->quantity;
+            $data['pieces_count'] = $detail->pieces_count ?? 0;
             $data['total'] = $detail->total;
             $data['price'] = $detail->price;
             $data['unit_sale'] = $unit?$unit->ShortName:'';
@@ -1210,7 +1213,8 @@ class SalesController extends BaseController
                 'paid_amount' => number_format($sale_data->paid_amount, 2, '.', ''),
                 'due' => number_format($sale_data->GrandTotal - $sale_data->paid_amount, 2, '.', ''),
                 'payment_status' => $sale_data->payment_statut,
-                'reglement' => $sale_data->facture->first()->Reglement ?? null,
+                'total_metrage' => number_format($sale_data->details->sum('quantity'), 2, '.', ''),
+                'total_pieces' => number_format($sale_data->details->sum('pieces_count'), 2, '.', ''),
             ];
 
             // LOAD ALL UNITS AND VARIANTS AT ONCE - NO MORE N+1 QUERIES
@@ -1256,6 +1260,7 @@ class SalesController extends BaseController
 
                 $data['detail_id'] = ++$detail_id;
                 $data['quantity'] = number_format($detail->quantity, 2, '.', '');
+                $data['pieces_count'] = number_format($detail->pieces_count ?? 0, 2, '.', '');
                 $data['total'] = number_format($detail->total, 2, '.', '');
                 $data['unitSale'] = $unit ? $unit->ShortName : '';
                 $data['price'] = number_format($detail->price, 2, '.', '');

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Facture _{{$sale['Ref']}}</title>
+    <title>Bon de livraison _{{$sale['Ref']}}</title>
     <link rel="stylesheet" href="{{asset('/css/pdf_style.css')}}" media="all" />
 </head>
 
@@ -13,13 +13,12 @@
     </div>
     <div id="company">
         <div><strong> Date : </strong>{{$sale['date']}}</div>
-        <div><strong> Numéro : </strong> {{$sale['Ref']}}</div>
+        <div><strong> Référence : </strong> {{$sale['Ref']}}</div>
         <div><strong> Statut : </strong> {{$sale['statut']}}</div>
         <div><strong> Statut de paiement : </strong> {{$sale['payment_status']}}</div>
-        @if($sale['reglement'])<div><strong>Règlement :</strong>  {{$sale['reglement']}}</div>@endif
     </div>
     <div id="Title-heading">
-        Vente : {{$sale['Ref']}}
+        Bon de livraison : {{$sale['Ref']}}
     </div>
 </header>
 <main>
@@ -70,9 +69,8 @@
             <tr>
                 <th>PRODUIT</th>
                 <th>PRIX UNITAIRE</th>
-                <th>QUANTITÉ</th>
-                <th>REMISSE</th>
-                <th>TAXE</th>
+                <th>QUANTITÉ / MÈTRES</th>
+                <th>PIÈCES</th>
                 <th>TOTAL</th>
             </tr>
             </thead>
@@ -87,8 +85,7 @@
                     </td>
                     <td>{{$detail['price']}} </td>
                     <td>{{$detail['quantity']}}/{{$detail['unitSale']}}</td>
-                    <td>{{$detail['DiscountNet']}} </td>
-                    <td>{{$detail['taxe']}} </td>
+                    <td>{{$detail['pieces_count'] ?? 0}}</td>
                     <td>{{$detail['total']}} </td>
                 </tr>
             @endforeach
@@ -98,29 +95,23 @@
     <div id="total">
         <table>
             <tr>
-                <td>Taxe sur la commande</td>
-                <td>{{$sale['TaxNet']}} </td>
+                <td>Référence</td>
+                <td>{{$sale['Ref']}}</td>
             </tr>
             <tr>
-                <td>Remise</td>
-                <td>{{$sale['discount']}} </td>
+                <td>Total metrage</td>
+                <td>{{$sale['total_metrage']}}</td>
             </tr>
             <tr>
-                <td>Expédition</td>
-                <td>{{$sale['shipping']}} </td>
+                <td>Total pieces</td>
+                <td>{{$sale['total_pieces']}}</td>
             </tr>
             <tr>
-                <td>Total</td>
+                <td>Prix final</td>
                 <td>{{$symbol}} {{$sale['GrandTotal']}} </td>
             </tr>
-
             <tr>
-                <td>Montant payé</td>
-                <td>{{$symbol}} {{$sale['paid_amount']}} </td>
-            </tr>
-
-            <tr>
-                <td>Montant dû</td>
+                <td>Reste à payer</td>
                 <td>{{$symbol}} {{$sale['due']}} </td>
             </tr>
         </table>
