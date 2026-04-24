@@ -10,6 +10,17 @@
       'PDF' => 'Barryvdh\\DomPDF\\Facade',
     ),
   ),
+  'facade/ignition' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Facade\\Ignition\\IgnitionServiceProvider',
+    ),
+    'aliases' => 
+    array (
+      'Flare' => 'Facade\\Ignition\\Facades\\Flare',
+    ),
+  ),
   'fideloper/proxy' => 
   array (
     'providers' => 
@@ -89,6 +100,13 @@
       'Nexmo' => 'Nexmo\\Laravel\\Facade\\Nexmo',
     ),
   ),
+  'nunomaduro/collision' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
+    ),
+  ),
   'nwidart/laravel-modules' => 
   array (
     'providers' => 
@@ -98,6 +116,14 @@
     'aliases' => 
     array (
       'Module' => 'Nwidart\\Modules\\Facades\\Module',
+    ),
+  ),
+  'oscarafdev/migrations-generator' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Way\\Generators\\GeneratorsServiceProvider',
+      1 => 'OscarAFDev\\MigrationsGenerator\\MigrationsGeneratorServiceProvider',
     ),
   ),
   'yajra/laravel-datatables-oracle' => 

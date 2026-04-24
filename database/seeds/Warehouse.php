@@ -13,9 +13,9 @@ class Warehouse extends Seeder
     public function run()
     {
         // Insert some stuff
-        DB::table('warehouses')->insert(
+        DB::table('warehouses')->updateOrInsert(
+            ['id' => 1],
             array(
-                'id'      => 1,
                 'name'    => 'Default Warehouse',
                 'city'    => NULL,
                 'mobile'  => NULL,

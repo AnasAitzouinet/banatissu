@@ -13,9 +13,9 @@ class SettingSeeder extends Seeder
     public function run()
     {
        // Insert some stuff
-        DB::table('settings')->insert(
+        DB::table('settings')->updateOrInsert(
+            ['id' => 1],
             array(
-                'id' => 1,
                 'email' => 'abdessamad@bana.ma',
                 'currency_id' => 1,
                 'client_id' => 1,
@@ -30,7 +30,6 @@ class SettingSeeder extends Seeder
                 'developed_by' => 'Banatiss',
                 'logo' => 'logo-default.png',
             )
-            
         );
     }
 }

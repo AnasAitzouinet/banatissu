@@ -13,9 +13,9 @@ class UserSeeder extends Seeder
     public function run()
     {
        // Insert some stuff
-        DB::table('users')->insert(
+        DB::table('users')->updateOrInsert(
+            ['id' => 1],
             array(
-                'id' => 1,
                 'firstname' => 'William',
                 'lastname' => 'Castillo',
                 'username' => 'William Castillo',

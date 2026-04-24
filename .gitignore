@@ -11,10 +11,13 @@
 /vendor
 .env
 .env.backup
-composer.lock
 .phpunit.result.cache
 docker-compose.override.yml
 Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+__MACOSX/
+.DS_Store
+deploy.zip
+/tmp

@@ -15,14 +15,14 @@ class RoleSeeder extends Seeder
     public function run()
     {
         // Insert some stuff
-	    DB::table('roles')->insert(
-            array([
-                'id'    => 1,
+	    DB::table('roles')->updateOrInsert(
+            ['id' => 1],
+            array(
                 'name'  => 'Owner',
                 'label' => 'Owner',
                 'status' => 1,
                 'description' => 'Owner',
-            ])
+            )
         );
     }
 }
